@@ -4,12 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.Writer;
+import java.net.Socket;
 
 @Data
 @AllArgsConstructor
 public class User {
     private String username;
     private String password;
-    // 输出流
-    private Writer writer;
+    private Socket socket;
 }

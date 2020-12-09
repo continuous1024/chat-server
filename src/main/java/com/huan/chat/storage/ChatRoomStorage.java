@@ -8,9 +8,11 @@ import java.util.List;
  * 聊天室服务
  */
 public interface ChatRoomStorage {
-    public boolean createChatRoom(String name);
+    boolean createChatRoom(String name);
 
-    public boolean deleteChatRoom(String name);
+    boolean deleteChatRoom(String name);
 
-    public List<ChatRoom> queryChatRooms();
+    List<ChatRoom> queryChatRooms();
+
+    ChatRoom queryChatRoomsByIdOrName(String idOrName);
 }

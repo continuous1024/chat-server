@@ -24,4 +24,11 @@ public class ChatRoomStorageImpl implements ChatRoomStorage {
     public List<ChatRoom> queryChatRooms() {
         return rooms;
     }
+
+    @Override
+    public ChatRoom queryChatRoomsByIdOrName(String idOrName) {
+        return rooms.stream()
+                .filter(chatRoom -> idOrName.equals(chatRoom.getId()) || idOrName.equals(chatRoom.getName()))
+                .findFirst().orElseGet(() -> null);
+    }
 }

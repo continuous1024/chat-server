@@ -1,5 +1,6 @@
 package com.huan.chat.server.io;
 
+import com.huan.chat.constants.Constants;
 import com.huan.chat.domain.User;
 import com.huan.chat.storage.ChatRoomStorage;
 import com.huan.chat.storage.ChatRoomStorageImpl;
@@ -15,67 +16,54 @@ import java.util.Scanner;
 
 @AllArgsConstructor
 public class UserHandler implements Runnable {
-    public final String END_OF_MESSAGE = "$Bye";
-    public final String LOGIN_MESSAGE = "$Login";
-    public final String Register_OF_MESSAGE = "$Register";
 
     private Socket socket;
 
     private UserStorage userStorage;
 
+    private ChatRoomStorage chatRoomStorage;
+
     @Override
     public void run() {
-        try (InputStream inStream = socket.getInputStream();
+        try {
+            InputStream inStream = socket.getInputStream();
             OutputStream outputStream = socket.getOutputStream();
             Scanner in = new Scanner(inStream);
             PrintWriter out = new PrintWriter(outputStream, true);
-        ) {
             out.println("Welcome! Please Input $Login to login, Input $Register to register, Input $Bye to Bye bye");
-            boolean isEnd = loginOrRegister(in, out);
+            User user = loginOrRegister(in, out);
             // 如果用户结束，那就结束吧
-            if (isEnd) {
+            if (user == null) {
                 return;
             }
 
-            while (in.hasNextLine()) {
-                String line = in.nextLine();
-                if (line.equals(END_OF_MESSAGE)) {
-                    out.println("Bye Bye");
-                    break;
-                } else {
-                    // 单例 or 依赖注入
-                    ChatRoomStorage chatRoomStorage = new ChatRoomStorageImpl();
-                    out.println("Ha Ha, 欢迎来到换宇聊天室");
-                    new Thread(new ChatHandler(socket, chatRoomStorage)).start();
-                }
-            }
+            out.println("Ha Ha, 欢迎来到换宇聊天室");
+            new Thread(new ChatHandler(user, chatRoomStorage)).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private boolean loginOrRegister(Scanner in, PrintWriter out) {
-        boolean isEnd = false;
-        label:
+    private User loginOrRegister(Scanner in, PrintWriter out) {
+        User user;
         while (in.hasNextLine()) {
             String line = in.nextLine();
             switch (line) {
-                case LOGIN_MESSAGE: {
-                    User user = login(in, out);
+                case Constants.LOGIN_MESSAGE: {
+                    user = login(in, out);
                     if (user != null) {
                         out.println("Welcome " + user.getUsername() + " to login");
-                        break label;
+                        return user;
                     }
                     break;
                 }
-                case END_OF_MESSAGE:
+                case Constants.END_OF_MESSAGE:
                     out.println("Bye Bye");
-                    isEnd = true;
-                    break label;
-                case Register_OF_MESSAGE: {
-                    User user = register(in, out);
+                    return null;
+                case Constants.Register_OF_MESSAGE: {
+                    user = register(in, out);
                     if (user != null) {
-                        break label;
+                        return user;
                     }
                     break;
                 }
@@ -84,7 +72,7 @@ public class UserHandler implements Runnable {
                     break;
             }
         }
-        return isEnd;
+        return null;
     }
 
     private User login(Scanner in, PrintWriter out) {
@@ -93,7 +81,7 @@ public class UserHandler implements Runnable {
         out.println("You username is " + username);
         String password = in.nextLine();
         out.println("You password is " + password);
-        return userStorage.login(username, password, out);
+        return userStorage.login(username, password, socket);
     }
 
     private User register(Scanner in, PrintWriter out) {
@@ -102,6 +90,6 @@ public class UserHandler implements Runnable {
         out.println("You username is " + username);
         String password = in.nextLine();
         out.println("You password is " + password);
-        return userStorage.register(username, password, out);
+        return userStorage.register(username, password, socket);
     }
 }

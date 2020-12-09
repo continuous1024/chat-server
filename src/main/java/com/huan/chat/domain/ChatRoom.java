@@ -2,6 +2,7 @@ package com.huan.chat.domain;
 
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,6 +21,7 @@ public class ChatRoom {
         this.name = name;
         // may be init users from database or redis
         this.limit = limit;
+        this.users = new ArrayList<>();
     }
 
     public ChatRoom(String name) {
